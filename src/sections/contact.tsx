@@ -1,23 +1,9 @@
-import { useState } from "react";
-import emailjs from "@emailjs/browser";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { motion } from "motion/react";
-import { Loader2, Mail, MapPin, Phone, Send, CheckCircle2 } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { FaGithub, FaLinkedinIn, FaDribbble, FaInstagram } from "react-icons/fa6";
 import { SectionHeading } from "@/components/section-heading";
 import { SITE } from "@/constants";
 import { fadeUp, viewportOnce } from "@/lib/motion";
-
-const schema = z.object({
-  name: z.string().trim().min(2, "Please enter your name").max(80),
-  email: z.string().trim().email("Enter a valid email").max(160),
-  subject: z.string().trim().min(3, "Add a subject").max(120),
-  message: z.string().trim().min(10, "Message is too short").max(1000),
-});
-
-type FormValues = z.infer<typeof schema>;
 
 const socials = [
   { icon: FaGithub, href: SITE.socials.github, label: "GitHub" },
@@ -33,42 +19,6 @@ const contactRows = [
 ];
 
 export function Contact() {
-  const [sent, setSent] = useState(false);
-  const [sendError, setSendError] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
-
-  const onSubmit = async (values: FormValues) => {
-    setSendError(false);
-    try {
-      await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        {
-          name: values.name,
-          email: values.email,
-          title: values.subject,
-          message: values.message,
-        },
-        { publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY },
-      );
-      setSent(true);
-      reset();
-      setTimeout(() => setSent(false), 5000);
-    } catch (error) {
-      console.error("EmailJS error:", error);
-      setSendError(true);
-      setTimeout(() => setSendError(false), 5000);
-    }
-  };
-
-  const fieldClass =
-    "w-full rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-ring/30";
-
   return (
     <section id="contact" className="relative py-24 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -78,7 +28,7 @@ export function Contact() {
           description="Have a project in mind or just want to say hello? My inbox is always open."
         />
 
-        <div className="mt-14 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="mt-14 mx-auto grid max-w-xl gap-8">
           {/* Left: contact info + map */}
           <motion.div
             variants={fadeUp}
@@ -134,123 +84,6 @@ export function Contact() {
               />
             </div>
           </motion.div>
-
-          {/* Right: form */}
-          <motion.form
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={viewportOnce}
-            onSubmit={handleSubmit(onSubmit)}
-            className="glass rounded-3xl p-6 shadow-soft sm:p-8"
-            noValidate
-          >
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label htmlFor="name" className="mb-1.5 block text-sm font-medium">
-                  Name
-                </label>
-                <input
-                  id="name"
-                  placeholder="Jane Doe"
-                  className={fieldClass}
-                  {...register("name")}
-                />
-                {errors.name && (
-                  <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  placeholder="jane@company.com"
-                  className={fieldClass}
-                  {...register("email")}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <label htmlFor="subject" className="mb-1.5 block text-sm font-medium">
-                Subject
-              </label>
-              <input
-                id="subject"
-                placeholder="Project inquiry"
-                className={fieldClass}
-                {...register("subject")}
-              />
-              {errors.subject && (
-                <p className="mt-1 text-xs text-destructive">{errors.subject.message}</p>
-              )}
-            </div>
-
-            <div className="mt-5">
-              <label htmlFor="message" className="mb-1.5 block text-sm font-medium">
-                Message
-              </label>
-              <textarea
-                id="message"
-                rows={5}
-                placeholder="Tell me about your project..."
-                className={`${fieldClass} resize-none`}
-                {...register("message")}
-              />
-              {errors.message && (
-                <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gradient px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-soft transition-shadow hover:shadow-glow disabled:opacity-70"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : sent ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Message sent!
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  Send Message
-                </>
-              )}
-            </button>
-
-            {sent && (
-              <motion.p
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 flex items-center justify-center gap-2 text-sm text-green-500"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                Thanks! I'll get back to you within 24 hours.
-              </motion.p>
-            )}
-
-            {sendError && (
-              <motion.p
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 text-center text-sm text-destructive"
-              >
-                Something went wrong. Please try again or email me directly.
-              </motion.p>
-            )}
-          </motion.form>
         </div>
       </div>
     </section>
